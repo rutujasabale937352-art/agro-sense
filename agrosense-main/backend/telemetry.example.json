@@ -1,0 +1,16 @@
+{
+  "system": {
+    "temperature": 30,
+    "humidity": 60,
+    "water_level": 75,
+    "rain": false,
+    "flow_rate": 2.1
+  },
+  "zones": [
+    {
+      "zone_id": 1,
+      "soil_moisture": 31,
+      "pump_status": false
+    }
+  ]
+}

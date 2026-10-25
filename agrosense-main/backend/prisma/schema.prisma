@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Device {
+  id         String            @id
+  name       String
+  wifiStatus String            @default("offline")
+  lastSeenAt DateTime?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  zones      Zone[]
+  readings   SensorReading[]
+  irrigation IrrigationEvent[]
+  alerts     Alert[]
+}
+
+model Zone {
+  id           Int               @id
+  deviceId     String
+  name         String
+  crop         String?
+  moistureMin  Float             @default(30)
+  moistureMax  Float             @default(70)
+  pumpStatus   Boolean           @default(false)
+  device       Device            @relation(fields: [deviceId], references: [id])
+  readings     SensorReading[]
+  irrigation   IrrigationEvent[]
+  alerts       Alert[]
+}
+
+model SensorReading {
+  id            String   @id @default(cuid())
+  deviceId      String
+  zoneId        Int?
+  recordedAt    DateTime
+  temperature   Float?
+  humidity      Float?
+  waterLevel    Float?
+  rain          Boolean?
+  flowRate      Float?
+  soilMoisture  Float?
+  device        Device   @relation(fields: [deviceId], references: [id])
+  zone          Zone?    @relation(fields: [zoneId], references: [id])
+
+  @@index([deviceId, recordedAt])
+  @@index([zoneId, recordedAt])
+}
+
+model IrrigationEvent {
+  id               String   @id @default(cuid())
+  deviceId         String
+  zoneId           Int
+  startedAt        DateTime
+  endedAt          DateTime?
+  durationSeconds  Int?
+  initialMoisture  Float?
+  finalMoisture    Float?
+  waterUsedLiters  Float?
+  pumpStatus       Boolean  @default(false)
+  device           Device   @relation(fields: [deviceId], references: [id])
+  zone             Zone     @relation(fields: [zoneId], references: [id])
+
+  @@index([deviceId, startedAt])
+  @@index([zoneId, startedAt])
+}
+
+model Alert {
+  id         String   @id @default(cuid())
+  deviceId   String
+  zoneId     Int?
+  type       String
+  severity   String
+  message    String
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime?
+  device     Device   @relation(fields: [deviceId], references: [id])
+  zone       Zone?    @relation(fields: [zoneId], references: [id])
+
+  @@index([deviceId, createdAt])
+}
